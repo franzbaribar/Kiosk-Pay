@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="online-payment.ico" type="image/x-icon">
+    <title>Telstra Philippines Payroll Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0070C0, #00509E);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 40px;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .label-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        label {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .info-icon {
+            width: 16px;
+            height: 16px;
+            background: #0070C0;
+            color: white;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: help;
+            position: relative;
+        }
+
+        .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            left: 25px;
+            top: -8px;
+            background: #333;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: normal;
+            width: 250px;
+            z-index: 1000;
+            transition: opacity 0.3s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .tooltip::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 12px;
+            border: 4px solid transparent;
+            border-right-color: #333;
+        }
+
+        .info-icon:hover .tooltip,
+        .info-icon:focus .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        input, select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #0070C0;
+        }
+
+        .calculate-btn {
+            background: linear-gradient(135deg, #0070C0, #00509E);
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,112,192,0.4);
+        }
+
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+
+        .results-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .results-section h3 {
+            color: #0070C0;
+            margin-bottom: 20px;
+            font-size: 20px;
+            border-bottom: 2px solid #0070C0;
+            padding-bottom: 10px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .result-value {
+            font-weight: 700;
+            color: #333;
+        }
+
+        .net-pay {
+            background: linear-gradient(135deg, #0070C0, #00509E);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .net-pay .label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .net-pay .amount {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .deductions-section {
+            margin-top: 20px;
+        }
+
+        .section-divider {
+            margin: 30px 0;
+            border: none;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Telstra Philippines Payroll Calculator</h1>
+            <p>Calculate your monthly take-home pay based on Philippine tax and statutory deductions</p>
+        </div>
+
+        <div class="content">
+            <!-- Left Column: Inputs -->
+            <div class="column">
+                <div class="form-group">
+                    <div class="label-wrapper">
+                        <label for="basicSalary">Monthly Basic Salary (₱)</label>
+                        <span class="info-icon" tabindex="0">?
+                            <span class="tooltip">Your fixed monthly salary before any allowances or deductions. This is the base amount stated in your employment contract.</span>
+                        </span>
+                    </div>
+                    <input type="number" id="basicSalary" placeholder="e.g., 25000" min="0" step="0.01">
+                </div>
+
+                <div class="form-group">
+                    <div class="label-wrapper">
+                        <label for="allowances">Monthly Allowances (₱)</label>
+                        <span class="info-icon" tabindex="0">?
+                            <span class="tooltip">Non-taxable allowances such as transportation, meal, and communication allowances up to the de minimis benefit limits set by BIR.</span>
+                        </span>
+                    </div>
+                    <input type="number" id="allowances" placeholder="e.g., 2000" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="form-group">
+                    <div class="label-wrapper">
+                        <label for="overtime">Overtime Pay (₱)</label>
+                        <span class="info-icon" tabindex="0">?
+                            <span class="tooltip">Additional compensation for work beyond regular hours. Overtime is typically taxable income unless specifically exempted.</span>
+                        </span>
+                    </div>
+                    <input type="number" id="overtime" placeholder="e.g., 1500" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="form-group">
+                    <div class="label-wrapper">
+                        <label for="nightDiff">Night Differential (₱)</label>
+                        <span class="info-icon" tabindex="0">?
+                            <span class="tooltip">Additional pay (minimum 10% of regular wage) for work performed between 10:00 PM and 6:00 AM.</span>
+                        </span>
+                    </div>
+                    <input type="number" id="nightDiff" placeholder="e.g., 800" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="form-group">
+                    <div class="label-wrapper">
+                        <label for="otherTaxable">Other Taxable Income (₱)</label>
+                        <span class="info-icon" tabindex="0">?
+                            <span class="tooltip">Any other taxable compensation such as bonuses, commissions, or incentives received during the month.</span>
+                        </span>
+                    </div>
+                    <input type="number" id="otherTaxable" placeholder="e.g., 1000" min="0" step="0.01" value="0">
+                </div>
+
+                <hr class="section-divider">
+
+                <div class="form-group">
+                    <div class="label-wrapper">
+                        <label for="civilStatus">Civil Status</label>
+                        <span class="info-icon" tabindex="0">?
+                            <span class="tooltip">Your marital status affects the withholding tax calculation. The number of dependents can provide additional tax exemptions.</span>
+                        </span>
+                    </div>
+                    <select id="civilStatus">
+                        <option value="single">Single</option>
+                        <option value="married">Married</option>
+                        <option value="head">Head of Family</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <div class="label-wrapper">
+                        <label for="dependents">Number of Qualified Dependents</label>
+                        <span class="info-icon" tabindex="0">?
+                            <span class="tooltip">Up to 4 qualified dependent children under 21 years old, unmarried, unemployed, and not engaged in business. Each dependent provides ₱25,000 additional exemption per year.</span>
+                        </span>
+                    </div>
+                    <select id="dependents">
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                    </select>
+                </div>
+
+                <button class="calculate-btn" onclick="calculatePayroll()">Calculate Net Pay</button>
+            </div>
+
+            <!-- Right Column: Results -->
+            <div class="column">
+                <div class="results-section">
+                    <h3>Earnings Summary</h3>
+                    <div class="result-item">
+                        <span class="result-label">Basic Salary</span>
+                        <span class="result-value" id="displayBasic">₱0.00</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Allowances</span>
+                        <span class="result-value" id="displayAllowances">₱0.00</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Overtime Pay</span>
+                        <span class="result-value" id="displayOvertime">₱0.00</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Night Differential</span>
+                        <span class="result-value" id="displayNightDiff">₱0.00</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Other Taxable Income</span>
+                        <span class="result-value" id="displayOtherTaxable">₱0.00</span>
+                    </div>
+                    <div class="result-item" style="border-top: 2px solid #0070C0; margin-top: 10px; padding-top: 15px;">
+                        <span class="result-label"><strong>Gross Pay</strong></span>
+                        <span class="result-value" id="displayGross" style="color: #0070C0; font-size: 18px;">₱0.00</span>
+                    </div>
+                </div>
+
+                <div class="results-section deductions-section">
+                    <h3>Statutory Deductions</h3>
+                    <div class="result-item">
+                        <span class="result-label">SSS Contribution</span>
+                        <span class="result-value" id="displaySSS">₱0.00</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">PhilHealth Contribution</span>
+                        <span class="result-value" id="displayPhilHealth">₱0.00</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Pag-IBIG Contribution</span>
+                        <span class="result-value" id="displayPagIbig">₱0.00</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Withholding Tax</span>
+                        <span class="result-value" id="displayTax">₱0.00</span>
+                    </div>
+                    <div class="result-item" style="border-top: 2px solid #0070C0; margin-top: 10px; padding-top: 15px;">
+                        <span class="result-label"><strong>Total Deductions</strong></span>
+                        <span class="result-value" id="displayTotalDeductions" style="color: #d32f2f; font-size: 18px;">₱0.00</span>
+                    </div>
+                </div>
+
+                <div class="net-pay">
+                    <div class="label">NET TAKE-HOME PAY</div>
+                    <div class="amount" id="displayNetPay">₱0.00</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>Disclaimer:</strong> This calculator provides estimates based on 2024-2025 Philippine tax tables and statutory contribution rates. 
+            Actual deductions may vary. For official payroll computations, please consult with Telstra HR or Payroll Department.</p>
+        </div>
+    </div>
+
+    <script>
+        // SSS Contribution Table 2024
+        function calculateSSS(salary) {
+            if (salary < 4250) return 180;
+            if (salary >= 4250 && salary < 4750) return 202.50;
+            if (salary >= 4750 && salary < 5250) return 225;
+            if (salary >= 5250 && salary < 5750) return 247.50;
+            if (salary >= 5750 && salary < 6250) return 270;
+            if (salary >= 6250 && salary < 6750) return 292.50;
+            if (salary >= 6750 && salary < 7250) return 315;
+            if (salary >= 7250 && salary < 7750) return 337.50;
+            if (salary >= 7750 && salary < 8250) return 360;
+            if (salary >= 8250 && salary < 8750) return 382.50;
+            if (salary >= 8750 && salary < 9250) return 405;
+            if (salary >= 9250 && salary < 9750) return 427.50;
+            if (salary >= 9750 && salary < 10250) return 450;
+            if (salary >= 10250 && salary < 10750) return 472.50;
+            if (salary >= 10750 && salary < 11250) return 495;
+            if (salary >= 11250 && salary < 11750) return 517.50;
+            if (salary >= 11750 && salary < 12250) return 540;
+            if (salary >= 12250 && salary < 12750) return 562.50;
+            if (salary >= 12750 && salary < 13250) return 585;
+            if (salary >= 13250 && salary < 13750) return 607.50;
+            if (salary >= 13750 && salary < 14250) return 630;
+            if (salary >= 14250 && salary < 14750) return 652.50;
+            if (salary >= 14750 && salary < 15250) return 675;
+            if (salary >= 15250 && salary < 15750) return 697.50;
+            if (salary >= 15750 && salary < 16250) return 720;
+            if (salary >= 16250 && salary < 16750) return 742.50;
+            if (salary >= 16750 && salary < 17250) return 765;
+            if (salary >= 17250 && salary < 17750) return 787.50;
+            if (salary >= 17750 && salary < 18250) return 810;
+            if (salary >= 18250 && salary < 18750) return 832.50;
+            if (salary >= 18750 && salary < 19250) return 855;
+            if (salary >= 19250 && salary < 19750) return 877.50;
+            if (salary >= 19750 && salary < 20250) return 900;
+            if (salary >= 20250 && salary < 20750) return 922.50;
+            if (salary >= 20750 && salary < 21250) return 945;
+            if (salary >= 21250 && salary < 21750) return 967.50;
+            if (salary >= 21750 && salary < 22250) return 990;
+            if (salary >= 22250 && salary < 22750) return 1012.50;
+            if (salary >= 22750 && salary < 23250) return 1035;
+            if (salary >= 23250 && salary < 23750) return 1057.50;
+            if (salary >= 23750 && salary < 24250) return 1080;
+            if (salary >= 24250 && salary < 24750) return 1102.50;
+            if (salary >= 24750) return 1125;
+        }
+
+        // PhilHealth Contribution 2024
+        function calculatePhilHealth(salary) {
+            const premium = salary * 0.05;
+            const maxPremium = 5000;
+            return Math.min(premium / 2, maxPremium / 2);
+        }
+
+        // Pag-IBIG Contribution
+        function calculatePagIbig(salary) {
+            if (salary <= 1500) return salary * 0.01;
+            if (salary <= 5000) return salary * 0.02;
+            return 100;
+        }
+
+        // Withholding Tax Calculation (TRAIN Law 2024)
+        function calculateTax(taxableIncome, civilStatus, dependents) {
+            const annualIncome = taxableIncome * 12;
+            const additionalExemption = dependents * 25000;
+            const adjustedIncome = annualIncome - additionalExemption;
+
+            let annualTax = 0;
+
+            if (adjustedIncome <= 250000) {
+                annualTax = 0;
+            } else if (adjustedIncome <= 400000) {
+                annualTax = (adjustedIncome - 250000) * 0.15;
+            } else if (adjustedIncome <= 800000) {
+                annualTax = 22500 + (adjustedIncome - 400000) * 0.20;
+            } else if (adjustedIncome <= 2000000) {
+                annualTax = 102500 + (adjustedIncome - 800000) * 0.25;
+            } else if (adjustedIncome <= 8000000) {
+                annualTax = 402500 + (adjustedIncome - 2000000) * 0.30;
+            } else {
+                annualTax = 2202500 + (adjustedIncome - 8000000) * 0.35;
+            }
+
+            return annualTax / 12;
+        }
+
+        function formatCurrency(amount) {
+            return '₱' + amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+
+        function calculatePayroll() {
+            const basicSalary = parseFloat(document.getElementById('basicSalary').value) || 0;
+            const allowances = parseFloat(document.getElementById('allowances').value) || 0;
+            const overtime = parseFloat(document.getElementById('overtime').value) || 0;
+            const nightDiff = parseFloat(document.getElementById('nightDiff').value) || 0;
+            const otherTaxable = parseFloat(document.getElementById('otherTaxable').value) || 0;
+            const civilStatus = document.getElementById('civilStatus').value;
+            const dependents = parseInt(document.getElementById('dependents').value);
+
+            const taxableIncome = basicSalary + overtime + nightDiff + otherTaxable;
+            const grossPay = taxableIncome + allowances;
+
+            const sss = calculateSSS(basicSalary);
+            const philHealth = calculatePhilHealth(basicSalary);
+            const pagIbig = calculatePagIbig(basicSalary);
+
+            const taxableAfterContributions = taxableIncome - sss - philHealth - pagIbig;
+            const withholdingTax = calculateTax(taxableAfterContributions, civilStatus, dependents);
+
+            const totalDeductions = sss + philHealth + pagIbig + withholdingTax;
+            const netPay = grossPay - totalDeductions;
+
+            document.getElementById('displayBasic').textContent = formatCurrency(basicSalary);
+            document.getElementById('displayAllowances').textContent = formatCurrency(allowances);
+            document.getElementById('displayOvertime').textContent = formatCurrency(overtime);
+            document.getElementById('displayNightDiff').textContent = formatCurrency(nightDiff);
+            document.getElementById('displayOtherTaxable').textContent = formatCurrency(otherTaxable);
+            document.getElementById('displayGross').textContent = formatCurrency(grossPay);
+
+            document.getElementById('displaySSS').textContent = formatCurrency(sss);
+            document.getElementById('displayPhilHealth').textContent = formatCurrency(philHealth);
+            document.getElementById('displayPagIbig').textContent = formatCurrency(pagIbig);
+            document.getElementById('displayTax').textContent = formatCurrency(withholdingTax);
+            document.getElementById('displayTotalDeductions').textContent = formatCurrency(totalDeductions);
+
+            document.getElementById('displayNetPay').textContent = formatCurrency(netPay);
+        }
+    </script>
+</body>
+</html>
